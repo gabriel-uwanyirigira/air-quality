@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+.active{
+    @apply bg-indigo-800;
+}
+
+/* Mobile-first responsive styles */
+@media (max-width: 1024px) {
+    .ml-64 {
+        margin-left: 0 !important;
+    }
+}
+
+@media print {
+    #sidebar {
+        display: none !important;
+    }
+    
+    .ml-64 {
+        margin-left: 0 !important;
+    }
+}
+
+/* Prevent scrolling when mobile menu is open */
+.menu-open {
+    overflow: hidden;
+}
+
