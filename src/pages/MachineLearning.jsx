@@ -144,39 +144,115 @@ function MachineLearning() {
         </div>
     );
 
-    // Function to generate dummy predictions
-    const generateDummyPredictions = (actualData) => {
-        if (!actualData || Object.keys(actualData).length === 0) return {};
-
-        const generatePredictedValues = (data) => {
-            return data.map(point => ({
-                time: point.time,
-                fullDate: point.fullDate,
-                // Add some random variation to the actual value
-                value: point.value * (3 + (Math.random() * 0.4 - 0.2)) // ±20% variation
-            }));
-        };
-
-        return {
-            so2: generatePredictedValues(actualData.so2),
-            pm25: generatePredictedValues(actualData.pm25),
-            pm10: generatePredictedValues(actualData.pm10),
-            co2: generatePredictedValues(actualData.co2),
-            no2: generatePredictedValues(actualData.no2),
-            o3: generatePredictedValues(actualData.o3),
-            temperature: generatePredictedValues(actualData.temperature),
-            humidity: generatePredictedValues(actualData.humidity),
-        };
-    };
-
-    // Replace the getPredictions function with this simplified version
+    // Replace the getPredictions function with this real API version
     const getPredictions = async (sensorData) => {
         try {
-            // Generate dummy predictions instead of making API call
-            const dummyPredictions = generateDummyPredictions(sensorData);
-            setPredictedData(dummyPredictions);
+            const response = await axios.get('https://raw.githubusercontent.com/gabriel-uwanyirigira/dqn_model/refs/heads/main/test_forecast.json');
+            const predictions = response.data; // Now an array of predictions
+            console.log(predictions)
+            // Process the predicted data in the same format as sensor data
+            const processedPredictions = {
+                so2: predictions.map(pred => ({
+                    time: new Date(pred.created_at).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }),
+                    fullDate: new Date(pred.created_at).toLocaleDateString('en-US', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric'
+                    }),
+                    value: parseFloat(pred.field1)
+                })),
+                pm25: predictions.map(pred => ({
+                    time: new Date(pred.created_at).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }),
+                    fullDate: new Date(pred.created_at).toLocaleDateString('en-US', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric'
+                    }),
+                    value: parseFloat(pred.field2)
+                })),
+                pm10: predictions.map(pred => ({
+                    time: new Date(pred.created_at).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }),
+                    fullDate: new Date(pred.created_at).toLocaleDateString('en-US', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric'
+                    }),
+                    value: parseFloat(pred.field3)
+                })),
+                co2: predictions.map(pred => ({
+                    time: new Date(pred.created_at).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }),
+                    fullDate: new Date(pred.created_at).toLocaleDateString('en-US', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric'
+                    }),
+                    value: parseFloat(pred.field4)
+                })),
+                no2: predictions.map(pred => ({
+                    time: new Date(pred.created_at).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }),
+                    fullDate: new Date(pred.created_at).toLocaleDateString('en-US', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric'
+                    }),
+                    value: parseFloat(pred.field5)
+                })),
+                o3: predictions.map(pred => ({
+                    time: new Date(pred.created_at).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }),
+                    fullDate: new Date(pred.created_at).toLocaleDateString('en-US', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric'
+                    }),
+                    value: parseFloat(pred.field6)
+                })),
+                temperature: predictions.map(pred => ({
+                    time: new Date(pred.created_at).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }),
+                    fullDate: new Date(pred.created_at).toLocaleDateString('en-US', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric'
+                    }),
+                    value: parseFloat(pred.field7)
+                })),
+                humidity: predictions.map(pred => ({
+                    time: new Date(pred.created_at).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }),
+                    fullDate: new Date(pred.created_at).toLocaleDateString('en-US', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric'
+                    }),
+                    value: parseFloat(pred.field8)
+                }))
+            };
+
+            setPredictedData(processedPredictions);
         } catch (error) {
-            console.error("Error generating predictions:", error);
+            console.error("Error fetching predictions:", error);
         }
     };
 
