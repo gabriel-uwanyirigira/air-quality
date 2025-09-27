@@ -1,11 +1,13 @@
 import { useEffect, useState, Suspense } from "react";
+import { useNavigate } from "react-router-dom";
 import GraphCard from "../components/GraphCard";
 import Sidebar from "../components/Sidebar";
 import axios from "axios";
 import Topbar from "../components/Topbar";
 
 function Home() {
-    
+    const navigate = useNavigate();
+
     const CHANNEL_ID = import.meta.env.VITE_CHANNEL_ID;
     const API_KEY = import.meta.env.VITE_API_KEY;
     
@@ -16,12 +18,34 @@ function Home() {
     // Add new state for date filter
     const [dateRange, setDateRange] = useState('24h');
 
+    // Function to calculate start date based on selected range
+    const getStartDate = (range) => {
+        const now = new Date();
+        switch (range) {
+            case '24h':
+                return new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            case '7d':
+                return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            case '30d':
+                return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            default:
+                return new Date(now.getTime() - 24 * 60 * 60 * 1000); // Default to 24h
+        }
+    };
+
     useEffect(() => {
         (async () => {
             try {
                 setLoading(true);
-                const response = await axios.get(`https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${API_KEY}`);
-                // const response = await axios.get(`http://localhost:8080/sensor/data`);
+                
+                // Calculate start date based on selected range
+                const startDate = getStartDate(dateRange);
+                const startDateStr = startDate.toISOString();
+                
+                // Construct API URL with date range filter
+                const apiUrl = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${API_KEY}&start=${startDateStr}`;
+                
+                const response = await axios.get(apiUrl);
                 const { feeds, channel } = response.data;
 
                 // Process the data for each sensor
@@ -131,7 +155,7 @@ function Home() {
                 setLoading(false);
             }
         })();
-    }, [refresh]);
+    }, [refresh, dateRange]);
 
     const handleRefresh = () => {
         setRefresh(prev => prev + 1);
@@ -150,7 +174,7 @@ function Home() {
             <Sidebar />
             <div className="flex-1">
                 {/* Top Navigation Bar */}
-                <Topbar loading={loading} setRefresh={setRefresh} setDateRange={null} dateRange={null} />
+                <Topbar loading={loading} setRefresh={setRefresh} setDateRange={setDateRange} dateRange={dateRange} />
 
                 {/* Main Content */}
                 <div className="lg:ml-64 p-4 lg:p-8">
@@ -164,28 +188,28 @@ function Home() {
                             // Show actual graph cards when data is loaded
                             <>
                                 <Suspense fallback={<SkeletonCard />}>
-                                    <GraphCard title="SO2 Levels" data={sensorData.so2} />
+                                    <GraphCard title="SO2 Levels" data={sensorData.so2} sensorId="so2" />
                                 </Suspense>
                                 <Suspense fallback={<SkeletonCard />}>
-                                    <GraphCard title="PM2.5 Levels" data={sensorData.pm25} />
+                                    <GraphCard title="PM2.5 Levels" data={sensorData.pm25} sensorId="pm25" />
                                 </Suspense>
                                 <Suspense fallback={<SkeletonCard />}>
-                                    <GraphCard title="PM10 Levels" data={sensorData.pm10} />
+                                    <GraphCard title="PM10 Levels" data={sensorData.pm10} sensorId="pm10" />
                                 </Suspense>
                                 <Suspense fallback={<SkeletonCard />}>
-                                    <GraphCard title="CO2 Levels" data={sensorData.co2} />
+                                    <GraphCard title="CO2 Levels" data={sensorData.co2} sensorId="co2" />
                                 </Suspense>
                                 <Suspense fallback={<SkeletonCard />}>
-                                    <GraphCard title="NO2 Levels" data={sensorData.no2} />
+                                    <GraphCard title="NO2 Levels" data={sensorData.no2} sensorId="no2" />
                                 </Suspense>
                                 <Suspense fallback={<SkeletonCard />}>
-                                    <GraphCard title="O3 Levels" data={sensorData.o3} />
+                                    <GraphCard title="O3 Levels" data={sensorData.o3} sensorId="o3" />
                                 </Suspense>
                                 <Suspense fallback={<SkeletonCard />}>
-                                    <GraphCard title="Temperature" data={sensorData.temperature} />
+                                    <GraphCard title="Temperature" data={sensorData.temperature} sensorId="temperature" />
                                 </Suspense>
                                 <Suspense fallback={<SkeletonCard />}>
-                                    <GraphCard title="Humidity" data={sensorData.humidity} />
+                                    <GraphCard title="Humidity" data={sensorData.humidity} sensorId="humidity" />
                                 </Suspense>
                             </>
                         )}
