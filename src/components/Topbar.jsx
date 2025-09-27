@@ -1,13 +1,19 @@
-function Topbar({ dateRange, setDateRange, setRefresh, loading }) {
+function Topbar({ dateRange, setDateRange, setRefresh, loading, device, setDevice }) {
 
     const refreshing = () => {
         setRefresh(Math.random());
     }
     
+    // Generate device options (1-10)
+    const deviceOptions = Array.from({ length: 10 }, (_, i) => ({
+        value: i + 1,
+        label: `Device ${i + 1}`
+    }));
+    
     return(
         <div className="lg:ml-64 bg-white shadow-sm">
-            <div className="px-4 lg:px-8 py-4 flex items-center justify-between">
-                <div className="flex items-center space-x-2 lg:space-x-4">
+            <div className="px-4 lg:px-8 py-4 flex flex-wrap items-center justify-between gap-4">
+                <div className="flex flex-wrap items-center space-x-2 lg:space-x-4">
                     <h1 className="text-lg lg:text-xl font-semibold text-gray-800">Sensor Dashboard</h1>
                     <div className="hidden lg:block h-6 w-px bg-gray-200"></div>
                     <select 
@@ -19,6 +25,18 @@ function Topbar({ dateRange, setDateRange, setRefresh, loading }) {
                         <option value="7d">Last 7 Days</option>
                         <option value="30d">Last 30 Days</option>
                         <option value="custom">Custom Range</option>
+                    </select>
+                    <div className="hidden lg:block h-6 w-px bg-gray-200"></div>
+                    <select 
+                        value={device}
+                        onChange={(e) => setDevice(e.target.value)}
+                        className="hidden lg:block px-3 py-1.5 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                        {deviceOptions.map(option => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
                     </select>
                 </div>
 
