@@ -18,12 +18,34 @@ function Home() {
     // Add new state for date filter
     const [dateRange, setDateRange] = useState('24h');
 
+    // Function to calculate start date based on selected range
+    const getStartDate = (range) => {
+        const now = new Date();
+        switch (range) {
+            case '24h':
+                return new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            case '7d':
+                return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            case '30d':
+                return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            default:
+                return new Date(now.getTime() - 24 * 60 * 60 * 1000); // Default to 24h
+        }
+    };
+
     useEffect(() => {
         (async () => {
             try {
                 setLoading(true);
-                const response = await axios.get(`https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${API_KEY}`);
-                // const response = await axios.get(`http://localhost:8080/sensor/data`);
+                
+                // Calculate start date based on selected range
+                const startDate = getStartDate(dateRange);
+                const startDateStr = startDate.toISOString();
+                
+                // Construct API URL with date range filter
+                const apiUrl = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${API_KEY}&start=${startDateStr}`;
+                
+                const response = await axios.get(apiUrl);
                 const { feeds, channel } = response.data;
 
                 // Process the data for each sensor
@@ -133,7 +155,7 @@ function Home() {
                 setLoading(false);
             }
         })();
-    }, [refresh]);
+    }, [refresh, dateRange]);
 
     const handleRefresh = () => {
         setRefresh(prev => prev + 1);
@@ -152,7 +174,7 @@ function Home() {
             <Sidebar />
             <div className="flex-1">
                 {/* Top Navigation Bar */}
-                <Topbar loading={loading} setRefresh={setRefresh} setDateRange={null} dateRange={null} />
+                <Topbar loading={loading} setRefresh={setRefresh} setDateRange={setDateRange} dateRange={dateRange} />
 
                 {/* Main Content */}
                 <div className="lg:ml-64 p-4 lg:p-8">

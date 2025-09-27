@@ -17,7 +17,7 @@ function App() {
         <Route path="/ml" element={<MachineLearning />} />
         <Route path="/track" element={<Tracking />} />
         <Route path="/sensors" element={<Sensors />} />
-        <Route path="/sensor/:sensorId" element={<SensorDetails />} />
+        <Route path="/sensors/:sensorId" element={<SensorDetails />} />
 
       </Routes>
     </BrowserRouter>

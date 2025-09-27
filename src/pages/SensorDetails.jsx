@@ -16,9 +16,22 @@ function SensorDetails() {
     const [loading, setLoading] = useState(true);
     const [sensorData, setSensorData] = useState(null);
     const [sensorInfo, setSensorInfo] = useState(null);
-
-    // Add new state for date filter
     const [dateRange, setDateRange] = useState('24h');
+
+    // Function to calculate start date based on selected range
+    const getStartDate = (range) => {
+        const now = new Date();
+        switch (range) {
+            case '24h':
+                return new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            case '7d':
+                return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            case '30d':
+                return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            default:
+                return new Date(now.getTime() - 24 * 60 * 60 * 1000); // Default to 24h
+        }
+    };
 
     // Sensor field mapping
     const sensorFields = {
@@ -43,7 +56,15 @@ function SensorDetails() {
         (async () => {
             try {
                 setLoading(true);
-                const response = await axios.get(`https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${API_KEY}`);
+                
+                // Calculate start date based on selected range
+                const startDate = getStartDate(dateRange);
+                const startDateStr = startDate.toISOString();
+                
+                // Construct API URL with date range filter
+                const apiUrl = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${API_KEY}&start=${startDateStr}`;
+                
+                const response = await axios.get(apiUrl);
                 const { feeds } = response.data;
 
                 // Process data for the specific sensor
@@ -67,7 +88,7 @@ function SensorDetails() {
                 setLoading(false);
             }
         })();
-    }, [sensorId, refresh]);
+    }, [sensorId, refresh, dateRange]);
 
     const handleRefresh = () => {
         setRefresh(prev => prev + 1);
@@ -124,19 +145,19 @@ function SensorDetails() {
                             <div className="bg-white rounded-xl shadow-md p-4">
                                 <h3 className="text-sm font-medium text-gray-500">Average</h3>
                                 <p className="text-2xl font-bold text-indigo-600 mt-1">
-                                    {sensorData.reduce((sum, item) => sum + item.value, 0) / sensorData.length} {sensorInfo?.unit}
+                                    {(sensorData.reduce((sum, item) => sum + item.value, 0) / sensorData.length).toFixed(2)} {sensorInfo?.unit}
                                 </p>
                             </div>
                             <div className="bg-white rounded-xl shadow-md p-4">
                                 <h3 className="text-sm font-medium text-gray-500">Max Value</h3>
                                 <p className="text-2xl font-bold text-indigo-600 mt-1">
-                                    {Math.max(...sensorData.map(item => item.value))} {sensorInfo?.unit}
+                                    {Math.max(...sensorData.map(item => item.value)).toFixed(2)} {sensorInfo?.unit}
                                 </p>
                             </div>
                             <div className="bg-white rounded-xl shadow-md p-4">
                                 <h3 className="text-sm font-medium text-gray-500">Min Value</h3>
                                 <p className="text-2xl font-bold text-indigo-600 mt-1">
-                                    {Math.min(...sensorData.map(item => item.value))} {sensorInfo?.unit}
+                                    {Math.min(...sensorData.map(item => item.value)).toFixed(2)} {sensorInfo?.unit}
                                 </p>
                             </div>
                         </div>

@@ -6,6 +6,8 @@ import axios from "axios";
 import Topbar from "../components/Topbar";
 
 function MachineLearning() {
+    const navigate = useNavigate();
+    
     const CHANNEL_ID = import.meta.env.VITE_CHANNEL_ID;
     const API_KEY = import.meta.env.VITE_API_KEY;
     
@@ -17,11 +19,34 @@ function MachineLearning() {
     // Add new state for date filter
     const [dateRange, setDateRange] = useState('24h');
 
+    // Function to calculate start date based on selected range
+    const getStartDate = (range) => {
+        const now = new Date();
+        switch (range) {
+            case '24h':
+                return new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            case '7d':
+                return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            case '30d':
+                return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            default:
+                return new Date(now.getTime() - 24 * 60 * 60 * 1000); // Default to 24h
+        }
+    };
+
     useEffect(() => {
         (async () => {
             try {
                 setLoading(true);
-                const response = await axios.get(`https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${API_KEY}&results=40`);
+                
+                // Calculate start date based on selected range
+                const startDate = getStartDate(dateRange);
+                const startDateStr = startDate.toISOString();
+                
+                // Construct API URL with date range filter
+                const apiUrl = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${API_KEY}&start=${startDateStr}&results=40`;
+                
+                const response = await axios.get(apiUrl);
                 const { feeds, channel } = response.data;
 
                 // Process the data for each sensor
@@ -131,7 +156,7 @@ function MachineLearning() {
                 setLoading(false);
             }
         })();
-    }, [refresh]);
+    }, [refresh, dateRange]);
 
     const handleRefresh = () => {
         setRefresh(prev => prev + 1);
@@ -300,58 +325,22 @@ function MachineLearning() {
                                     />
                                 </Suspense>
                                 <Suspense fallback={<SkeletonCard />}>
-                                    <GraphCard 
-                                        title="PM10 Levels" 
-                                        data={sensorData.pm10}
-                                        predictedData={predictedData.pm10}
-                                        showPrediction={true}
-                                        sensorId="pm10"
-                                    />
+                                    <GraphCard title="PM10 Levels" data={sensorData.pm10} predictedData={predictedData.pm10} showPrediction={true} sensorId="pm10" />
                                 </Suspense>
                                 <Suspense fallback={<SkeletonCard />}>
-                                    <GraphCard 
-                                        title="CO2 Levels" 
-                                        data={sensorData.co2}
-                                        predictedData={predictedData.co2}
-                                        showPrediction={true}
-                                        sensorId="co2"
-                                    />
+                                    <GraphCard title="CO2 Levels" data={sensorData.co2} predictedData={predictedData.co2} showPrediction={true} sensorId="co2" />
                                 </Suspense>
                                 <Suspense fallback={<SkeletonCard />}>
-                                    <GraphCard 
-                                        title="NO2 Levels" 
-                                        data={sensorData.no2}
-                                        predictedData={predictedData.no2}
-                                        showPrediction={true}
-                                        sensorId="no2"
-                                    />
+                                    <GraphCard title="NO2 Levels" data={sensorData.no2} predictedData={predictedData.no2} showPrediction={true} sensorId="no2" />
                                 </Suspense>
                                 <Suspense fallback={<SkeletonCard />}>
-                                    <GraphCard 
-                                        title="O3 Levels" 
-                                        data={sensorData.o3}
-                                        predictedData={predictedData.o3}
-                                        showPrediction={true}
-                                        sensorId="o3"
-                                    />
+                                    <GraphCard title="O3 Levels" data={sensorData.o3} predictedData={predictedData.o3} showPrediction={true} sensorId="o3" />
                                 </Suspense>
                                 <Suspense fallback={<SkeletonCard />}>
-                                    <GraphCard 
-                                        title="Temperature" 
-                                        data={sensorData.temperature}
-                                        predictedData={predictedData.temperature}
-                                        showPrediction={true}
-                                        sensorId="temperature"
-                                    />
+                                    <GraphCard title="Temperature" data={sensorData.temperature} predictedData={predictedData.temperature} showPrediction={true} sensorId="temperature" />
                                 </Suspense>
                                 <Suspense fallback={<SkeletonCard />}>
-                                    <GraphCard 
-                                        title="Humidity" 
-                                        data={sensorData.humidity}
-                                        predictedData={predictedData.humidity}
-                                        showPrediction={true}
-                                        sensorId="humidity"
-                                    />
+                                    <GraphCard title="Humidity" data={sensorData.humidity} predictedData={predictedData.humidity} showPrediction={true} sensorId="humidity" />
                                 </Suspense>
                             </>
                         )}

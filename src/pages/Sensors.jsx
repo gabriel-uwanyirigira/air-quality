@@ -13,9 +13,22 @@ function Sensors() {
     const [refresh, setRefresh] = useState(0);
     const [loading, setLoading] = useState(true);
     const [sensorData, setSensorData] = useState([]);
-
-    // Add new state for date filter
     const [dateRange, setDateRange] = useState('24h');
+
+    // Function to calculate start date based on selected range
+    const getStartDate = (range) => {
+        const now = new Date();
+        switch (range) {
+            case '24h':
+                return new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            case '7d':
+                return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            case '30d':
+                return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            default:
+                return new Date(now.getTime() - 24 * 60 * 60 * 1000); // Default to 24h
+        }
+    };
 
     // Sensor field mapping
     const sensorFields = {
@@ -33,7 +46,15 @@ function Sensors() {
         (async () => {
             try {
                 setLoading(true);
-                const response = await axios.get(`https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${API_KEY}&results=1`);
+                
+                // Calculate start date based on selected range
+                const startDate = getStartDate(dateRange);
+                const startDateStr = startDate.toISOString();
+                
+                // Construct API URL with date range filter
+                const apiUrl = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${API_KEY}&start=${startDateStr}&results=1`;
+                
+                const response = await axios.get(apiUrl);
                 const { feeds } = response.data;
 
                 if (feeds && feeds.length > 0) {
@@ -57,7 +78,7 @@ function Sensors() {
                 setLoading(false);
             }
         })();
-    }, [refresh]);
+    }, [refresh, dateRange]);
 
     const handleRefresh = () => {
         setRefresh(prev => prev + 1);

@@ -40,12 +40,12 @@ export default function GraphCard({ title, data, predictedData, showPrediction, 
 
     const handleClick = () => {
         if (sensorId) {
-            navigate(`/sensor/${sensorId}`);
+            navigate(`/sensors/${sensorId}`);
         } else {
             const titleMap = getTitleToIdMap();
             const id = titleMap[title];
             if (id) {
-                navigate(`/sensor/${id}`);
+                navigate(`/sensors/${id}`);
             }
         }
     };
