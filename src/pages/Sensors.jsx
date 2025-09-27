@@ -117,7 +117,7 @@ function Sensors() {
                                 <div 
                                     key={sensor.id}
                                     className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
-                                    onClick={() => navigate(`/sensor/${sensor.id}`)}
+                                    onClick={() => navigate(`/sensors/${sensor.id}`)}
                                 >
                                     <div className="flex items-center justify-between">
                                         <h3 className="text-lg font-semibold text-gray-800">{sensor.name}</h3>
