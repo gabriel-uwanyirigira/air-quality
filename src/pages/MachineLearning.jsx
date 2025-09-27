@@ -8,16 +8,31 @@ import Topbar from "../components/Topbar";
 function MachineLearning() {
     const navigate = useNavigate();
     
-    const CHANNEL_ID = import.meta.env.VITE_CHANNEL_ID;
-    const API_KEY = import.meta.env.VITE_API_KEY;
+    // Default CHANNEL_ID and API_KEY (fallback)
+    const DEFAULT_CHANNEL_ID = import.meta.env.VITE_CHANNEL_ID;
+    const DEFAULT_API_KEY = import.meta.env.VITE_API_KEY;
+    
+    // Device specific CHANNEL_ID and API_KEY
+    const getDeviceCredentials = (device) => {
+        const channelId = import.meta.env[`VITE_CHANNEL_ID_${device}`];
+        const apiKey = import.meta.env[`VITE_API_KEY_${device}`];
+        return {
+            channelId: channelId || DEFAULT_CHANNEL_ID,
+            apiKey: apiKey || DEFAULT_API_KEY
+        };
+    };
     
     const [refresh, setRefresh] = useState(0);
     const [loading, setLoading] = useState(true);
     const [sensorData, setSensorData] = useState({});
     const [predictedData, setPredictedData] = useState({});
 
-    // Add new state for date filter
+    // Add new state for date filter and device selection
     const [dateRange, setDateRange] = useState('24h');
+    const [device, setDevice] = useState(() => {
+        // Get device from localStorage or default to '1'
+        return localStorage.getItem('selectedDevice') || '1';
+    });
 
     // Function to calculate start date based on selected range
     const getStartDate = (range) => {
@@ -34,17 +49,25 @@ function MachineLearning() {
         }
     };
 
+    // Save device to localStorage whenever it changes
+    useEffect(() => {
+        localStorage.setItem('selectedDevice', device);
+    }, [device]);
+
     useEffect(() => {
         (async () => {
             try {
                 setLoading(true);
+                
+                // Get device-specific credentials
+                const { channelId, apiKey } = getDeviceCredentials(device);
                 
                 // Calculate start date based on selected range
                 const startDate = getStartDate(dateRange);
                 const startDateStr = startDate.toISOString();
                 
                 // Construct API URL with date range filter
-                const apiUrl = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${API_KEY}&start=${startDateStr}&results=40`;
+                const apiUrl = `https://api.thingspeak.com/channels/${channelId}/feeds.json?api_key=${apiKey}&start=${startDateStr}&results=40`;
                 
                 const response = await axios.get(apiUrl);
                 const { feeds, channel } = response.data;
@@ -156,7 +179,7 @@ function MachineLearning() {
                 setLoading(false);
             }
         })();
-    }, [refresh, dateRange]);
+    }, [refresh, dateRange, device]);
 
     const handleRefresh = () => {
         setRefresh(prev => prev + 1);
@@ -293,7 +316,14 @@ function MachineLearning() {
             <Sidebar />
             <div className="flex-1">
                 {/* Top Navigation Bar */}
-                <Topbar loading={loading} setRefresh={setRefresh} setDateRange={setDateRange} dateRange={dateRange} />
+                <Topbar 
+                    loading={loading} 
+                    setRefresh={setRefresh} 
+                    setDateRange={setDateRange} 
+                    dateRange={dateRange}
+                    device={device}
+                    setDevice={setDevice}
+                />
 
                 {/* Main Content */}
                 <div className="ml-64 p-8">

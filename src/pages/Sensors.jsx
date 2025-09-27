@@ -7,13 +7,28 @@ import Topbar from "../components/Topbar";
 function Sensors() {
     const navigate = useNavigate();
     
-    const CHANNEL_ID = import.meta.env.VITE_CHANNEL_ID;
-    const API_KEY = import.meta.env.VITE_API_KEY;
+    // Default CHANNEL_ID and API_KEY (fallback)
+    const DEFAULT_CHANNEL_ID = import.meta.env.VITE_CHANNEL_ID;
+    const DEFAULT_API_KEY = import.meta.env.VITE_API_KEY;
+    
+    // Device specific CHANNEL_ID and API_KEY
+    const getDeviceCredentials = (device) => {
+        const channelId = import.meta.env[`VITE_CHANNEL_ID_${device}`];
+        const apiKey = import.meta.env[`VITE_API_KEY_${device}`];
+        return {
+            channelId: channelId || DEFAULT_CHANNEL_ID,
+            apiKey: apiKey || DEFAULT_API_KEY
+        };
+    };
     
     const [refresh, setRefresh] = useState(0);
     const [loading, setLoading] = useState(true);
     const [sensorData, setSensorData] = useState([]);
     const [dateRange, setDateRange] = useState('24h');
+    const [device, setDevice] = useState(() => {
+        // Get device from localStorage or default to '1'
+        return localStorage.getItem('selectedDevice') || '1';
+    });
 
     // Function to calculate start date based on selected range
     const getStartDate = (range) => {
@@ -29,6 +44,11 @@ function Sensors() {
                 return new Date(now.getTime() - 24 * 60 * 60 * 1000); // Default to 24h
         }
     };
+
+    // Save device to localStorage whenever it changes
+    useEffect(() => {
+        localStorage.setItem('selectedDevice', device);
+    }, [device]);
 
     // Sensor field mapping
     const sensorFields = {
@@ -47,12 +67,15 @@ function Sensors() {
             try {
                 setLoading(true);
                 
+                // Get device-specific credentials
+                const { channelId, apiKey } = getDeviceCredentials(device);
+                
                 // Calculate start date based on selected range
                 const startDate = getStartDate(dateRange);
                 const startDateStr = startDate.toISOString();
                 
                 // Construct API URL with date range filter
-                const apiUrl = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${API_KEY}&start=${startDateStr}&results=1`;
+                const apiUrl = `https://api.thingspeak.com/channels/${channelId}/feeds.json?api_key=${apiKey}&start=${startDateStr}&results=1`;
                 
                 const response = await axios.get(apiUrl);
                 const { feeds } = response.data;
@@ -78,7 +101,7 @@ function Sensors() {
                 setLoading(false);
             }
         })();
-    }, [refresh, dateRange]);
+    }, [refresh, dateRange, device]);
 
     const handleRefresh = () => {
         setRefresh(prev => prev + 1);
@@ -97,7 +120,14 @@ function Sensors() {
             <Sidebar />
             <div className="flex-1">
                 {/* Top Navigation Bar */}
-                <Topbar loading={loading} setRefresh={setRefresh} setDateRange={setDateRange} dateRange={dateRange} />
+                <Topbar 
+                    loading={loading} 
+                    setRefresh={setRefresh} 
+                    setDateRange={setDateRange} 
+                    dateRange={dateRange}
+                    device={device}
+                    setDevice={setDevice}
+                />
 
                 {/* Main Content */}
                 <div className="lg:ml-64 p-4 lg:p-8">
@@ -117,7 +147,7 @@ function Sensors() {
                                 <div 
                                     key={sensor.id}
                                     className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
-                                    onClick={() => navigate(`/sensors/${sensor.id}`)}
+                                    onClick={() => navigate(`/sensor/${sensor.id}`)}
                                 >
                                     <div className="flex items-center justify-between">
                                         <h3 className="text-lg font-semibold text-gray-800">{sensor.name}</h3>
