@@ -1,11 +1,13 @@
 import { useEffect, useState, Suspense } from "react";
+import { useNavigate } from "react-router-dom";
 import GraphCard from "../components/GraphCard";
 import Sidebar from "../components/Sidebar";
 import axios from "axios";
 import Topbar from "../components/Topbar";
 
 function Home() {
-    
+    const navigate = useNavigate();
+
     const CHANNEL_ID = import.meta.env.VITE_CHANNEL_ID;
     const API_KEY = import.meta.env.VITE_API_KEY;
     
@@ -164,28 +166,28 @@ function Home() {
                             // Show actual graph cards when data is loaded
                             <>
                                 <Suspense fallback={<SkeletonCard />}>
-                                    <GraphCard title="SO2 Levels" data={sensorData.so2} />
+                                    <GraphCard title="SO2 Levels" data={sensorData.so2} sensorId="so2" />
                                 </Suspense>
                                 <Suspense fallback={<SkeletonCard />}>
-                                    <GraphCard title="PM2.5 Levels" data={sensorData.pm25} />
+                                    <GraphCard title="PM2.5 Levels" data={sensorData.pm25} sensorId="pm25" />
                                 </Suspense>
                                 <Suspense fallback={<SkeletonCard />}>
-                                    <GraphCard title="PM10 Levels" data={sensorData.pm10} />
+                                    <GraphCard title="PM10 Levels" data={sensorData.pm10} sensorId="pm10" />
                                 </Suspense>
                                 <Suspense fallback={<SkeletonCard />}>
-                                    <GraphCard title="CO2 Levels" data={sensorData.co2} />
+                                    <GraphCard title="CO2 Levels" data={sensorData.co2} sensorId="co2" />
                                 </Suspense>
                                 <Suspense fallback={<SkeletonCard />}>
-                                    <GraphCard title="NO2 Levels" data={sensorData.no2} />
+                                    <GraphCard title="NO2 Levels" data={sensorData.no2} sensorId="no2" />
                                 </Suspense>
                                 <Suspense fallback={<SkeletonCard />}>
-                                    <GraphCard title="O3 Levels" data={sensorData.o3} />
+                                    <GraphCard title="O3 Levels" data={sensorData.o3} sensorId="o3" />
                                 </Suspense>
                                 <Suspense fallback={<SkeletonCard />}>
-                                    <GraphCard title="Temperature" data={sensorData.temperature} />
+                                    <GraphCard title="Temperature" data={sensorData.temperature} sensorId="temperature" />
                                 </Suspense>
                                 <Suspense fallback={<SkeletonCard />}>
-                                    <GraphCard title="Humidity" data={sensorData.humidity} />
+                                    <GraphCard title="Humidity" data={sensorData.humidity} sensorId="humidity" />
                                 </Suspense>
                             </>
                         )}

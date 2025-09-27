@@ -1,4 +1,5 @@
 import { useEffect, useState, Suspense } from "react";
+import { useNavigate } from "react-router-dom";
 import GraphCard from "../components/GraphCard";
 import Sidebar from "../components/Sidebar";
 import axios from "axios";
@@ -286,6 +287,7 @@ function MachineLearning() {
                                         data={sensorData.so2}
                                         predictedData={predictedData.so2}
                                         showPrediction={true}
+                                        sensorId="so2"
                                     />
                                 </Suspense>
                                 <Suspense fallback={<SkeletonCard />}>
@@ -294,25 +296,62 @@ function MachineLearning() {
                                         data={sensorData.pm25}
                                         predictedData={predictedData.pm25}
                                         showPrediction={true}
+                                        sensorId="pm25"
                                     />
                                 </Suspense>
                                 <Suspense fallback={<SkeletonCard />}>
-                                    <GraphCard title="PM10 Levels" data={sensorData.pm10} predictedData={predictedData.pm10} showPrediction={true} />
+                                    <GraphCard 
+                                        title="PM10 Levels" 
+                                        data={sensorData.pm10}
+                                        predictedData={predictedData.pm10}
+                                        showPrediction={true}
+                                        sensorId="pm10"
+                                    />
                                 </Suspense>
                                 <Suspense fallback={<SkeletonCard />}>
-                                    <GraphCard title="CO2 Levels" data={sensorData.co2} predictedData={predictedData.co2} showPrediction={true} />
+                                    <GraphCard 
+                                        title="CO2 Levels" 
+                                        data={sensorData.co2}
+                                        predictedData={predictedData.co2}
+                                        showPrediction={true}
+                                        sensorId="co2"
+                                    />
                                 </Suspense>
                                 <Suspense fallback={<SkeletonCard />}>
-                                    <GraphCard title="NO2 Levels" data={sensorData.no2} predictedData={predictedData.no2} showPrediction={true} />
+                                    <GraphCard 
+                                        title="NO2 Levels" 
+                                        data={sensorData.no2}
+                                        predictedData={predictedData.no2}
+                                        showPrediction={true}
+                                        sensorId="no2"
+                                    />
                                 </Suspense>
                                 <Suspense fallback={<SkeletonCard />}>
-                                    <GraphCard title="O3 Levels" data={sensorData.o3} predictedData={predictedData.o3} showPrediction={true} />
+                                    <GraphCard 
+                                        title="O3 Levels" 
+                                        data={sensorData.o3}
+                                        predictedData={predictedData.o3}
+                                        showPrediction={true}
+                                        sensorId="o3"
+                                    />
                                 </Suspense>
                                 <Suspense fallback={<SkeletonCard />}>
-                                    <GraphCard title="Temperature" data={sensorData.temperature} predictedData={predictedData.temperature} showPrediction={true} />
+                                    <GraphCard 
+                                        title="Temperature" 
+                                        data={sensorData.temperature}
+                                        predictedData={predictedData.temperature}
+                                        showPrediction={true}
+                                        sensorId="temperature"
+                                    />
                                 </Suspense>
                                 <Suspense fallback={<SkeletonCard />}>
-                                    <GraphCard title="Humidity" data={sensorData.humidity} predictedData={predictedData.humidity} showPrediction={true} />
+                                    <GraphCard 
+                                        title="Humidity" 
+                                        data={sensorData.humidity}
+                                        predictedData={predictedData.humidity}
+                                        showPrediction={true}
+                                        sensorId="humidity"
+                                    />
                                 </Suspense>
                             </>
                         )}
