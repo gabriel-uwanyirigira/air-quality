@@ -196,112 +196,334 @@ function MachineLearning() {
     // Replace the getPredictions function with this real API version
     const getPredictions = async (sensorData) => {
         try {
-            const response = await axios.get('https://raw.githubusercontent.com/gabriel-uwanyirigira/dqn_model/refs/heads/main/test_forecast.json');
-            const predictions = response.data; // Now an array of predictions
-            console.log(predictions)
+            // Prepare multiple data points for prediction (using last 5 data points)
+            const dataPoints = [];
+            const dataLength = sensorData.so2.length;
+            const pointsToUse = Math.min(5, dataLength); // Use up to 5 recent data points
+            
+            for (let i = pointsToUse - 1; i >= 0; i--) {
+                const index = dataLength - 1 - i;
+                dataPoints.push({
+                    field1: sensorData.so2[index]?.value || 0,
+                    field2: sensorData.pm25[index]?.value || 0,
+                    field3: sensorData.pm10[index]?.value || 0,
+                    field4: sensorData.co2[index]?.value || 0,
+                    field5: sensorData.no2[index]?.value || 0,
+                    field6: sensorData.o3[index]?.value || 0,
+                    field7: sensorData.temperature[index]?.value || 0,
+                    field8: sensorData.humidity[index]?.value || 0
+                });
+            }
+
+            // Call the prediction API with multiple data points
+            const response = await axios.post(
+                `https://multi-sensor-data-predicter.onrender.com/predict_sequence?steps=${dataPoints.length + 5}`,
+                { data: dataPoints },
+                {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+
+            const predictions = response.data.predictions;
+            
             // Process the predicted data in the same format as sensor data
+            // We'll generate future timestamps based on the last actual timestamp
+            const lastActualTime = new Date(sensorData.so2[sensorData.so2.length - 1]?.fullDate || new Date());
+            
             const processedPredictions = {
-                so2: predictions.map(pred => ({
-                    time: new Date(pred.created_at).toLocaleTimeString('en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    }),
-                    fullDate: new Date(pred.created_at).toLocaleDateString('en-US', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
-                    }),
-                    value: parseFloat(pred.field1)
-                })),
-                pm25: predictions.map(pred => ({
-                    time: new Date(pred.created_at).toLocaleTimeString('en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    }),
-                    fullDate: new Date(pred.created_at).toLocaleDateString('en-US', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
-                    }),
-                    value: parseFloat(pred.field2)
-                })),
-                pm10: predictions.map(pred => ({
-                    time: new Date(pred.created_at).toLocaleTimeString('en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    }),
-                    fullDate: new Date(pred.created_at).toLocaleDateString('en-US', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
-                    }),
-                    value: parseFloat(pred.field3)
-                })),
-                co2: predictions.map(pred => ({
-                    time: new Date(pred.created_at).toLocaleTimeString('en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    }),
-                    fullDate: new Date(pred.created_at).toLocaleDateString('en-US', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
-                    }),
-                    value: parseFloat(pred.field4)
-                })),
-                no2: predictions.map(pred => ({
-                    time: new Date(pred.created_at).toLocaleTimeString('en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    }),
-                    fullDate: new Date(pred.created_at).toLocaleDateString('en-US', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
-                    }),
-                    value: parseFloat(pred.field5)
-                })),
-                o3: predictions.map(pred => ({
-                    time: new Date(pred.created_at).toLocaleTimeString('en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    }),
-                    fullDate: new Date(pred.created_at).toLocaleDateString('en-US', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
-                    }),
-                    value: parseFloat(pred.field6)
-                })),
-                temperature: predictions.map(pred => ({
-                    time: new Date(pred.created_at).toLocaleTimeString('en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    }),
-                    fullDate: new Date(pred.created_at).toLocaleDateString('en-US', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
-                    }),
-                    value: parseFloat(pred.field7)
-                })),
-                humidity: predictions.map(pred => ({
-                    time: new Date(pred.created_at).toLocaleTimeString('en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    }),
-                    fullDate: new Date(pred.created_at).toLocaleDateString('en-US', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
-                    }),
-                    value: parseFloat(pred.field8)
-                }))
+                so2: predictions.map((pred, index) => {
+                    const futureTime = new Date(lastActualTime);
+                    futureTime.setHours(futureTime.getHours() + index + 1); // Increment by 1 hour for each prediction
+                    
+                    return {
+                        time: futureTime.toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }),
+                        fullDate: futureTime.toLocaleDateString('en-US', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                        }),
+                        value: parseFloat(pred.field1)
+                    };
+                }),
+                pm25: predictions.map((pred, index) => {
+                    const futureTime = new Date(lastActualTime);
+                    futureTime.setHours(futureTime.getHours() + index + 1);
+                    
+                    return {
+                        time: futureTime.toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }),
+                        fullDate: futureTime.toLocaleDateString('en-US', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                        }),
+                        value: parseFloat(pred.field2)
+                    };
+                }),
+                pm10: predictions.map((pred, index) => {
+                    const futureTime = new Date(lastActualTime);
+                    futureTime.setHours(futureTime.getHours() + index + 1);
+                    
+                    return {
+                        time: futureTime.toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }),
+                        fullDate: futureTime.toLocaleDateString('en-US', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                        }),
+                        value: parseFloat(pred.field3)
+                    };
+                }),
+                co2: predictions.map((pred, index) => {
+                    const futureTime = new Date(lastActualTime);
+                    futureTime.setHours(futureTime.getHours() + index + 1);
+                    
+                    return {
+                        time: futureTime.toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }),
+                        fullDate: futureTime.toLocaleDateString('en-US', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                        }),
+                        value: parseFloat(pred.field4)
+                    };
+                }),
+                no2: predictions.map((pred, index) => {
+                    const futureTime = new Date(lastActualTime);
+                    futureTime.setHours(futureTime.getHours() + index + 1);
+                    
+                    return {
+                        time: futureTime.toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }),
+                        fullDate: futureTime.toLocaleDateString('en-US', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                        }),
+                        value: parseFloat(pred.field5)
+                    };
+                }),
+                o3: predictions.map((pred, index) => {
+                    const futureTime = new Date(lastActualTime);
+                    futureTime.setHours(futureTime.getHours() + index + 1);
+                    
+                    return {
+                        time: futureTime.toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }),
+                        fullDate: futureTime.toLocaleDateString('en-US', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                        }),
+                        value: parseFloat(pred.field6)
+                    };
+                }),
+                temperature: predictions.map((pred, index) => {
+                    const futureTime = new Date(lastActualTime);
+                    futureTime.setHours(futureTime.getHours() + index + 1);
+                    
+                    return {
+                        time: futureTime.toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }),
+                        fullDate: futureTime.toLocaleDateString('en-US', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                        }),
+                        value: parseFloat(pred.field7)
+                    };
+                }),
+                humidity: predictions.map((pred, index) => {
+                    const futureTime = new Date(lastActualTime);
+                    futureTime.setHours(futureTime.getHours() + index + 1);
+                    
+                    return {
+                        time: futureTime.toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }),
+                        fullDate: futureTime.toLocaleDateString('en-US', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                        }),
+                        value: parseFloat(pred.field8)
+                    };
+                })
             };
 
             setPredictedData(processedPredictions);
         } catch (error) {
             console.error("Error fetching predictions:", error);
+            // Fallback to test data if API fails
+            try {
+                const fallbackResponse = await axios.get('https://raw.githubusercontent.com/gabriel-uwanyirigira/dqn_model/refs/heads/main/test_forecast.json');
+                const fallbackPredictions = fallbackResponse.data;
+                
+                const lastActualTime = new Date(sensorData.so2[sensorData.so2.length - 1]?.fullDate || new Date());
+                
+                const processedFallback = {
+                    so2: fallbackPredictions.map((pred, index) => {
+                        const futureTime = new Date(lastActualTime);
+                        futureTime.setHours(futureTime.getHours() + index + 1);
+                        
+                        return {
+                            time: futureTime.toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            }),
+                            fullDate: futureTime.toLocaleDateString('en-US', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric'
+                            }),
+                            value: parseFloat(pred.field1)
+                        };
+                    }),
+                    pm25: fallbackPredictions.map((pred, index) => {
+                        const futureTime = new Date(lastActualTime);
+                        futureTime.setHours(futureTime.getHours() + index + 1);
+                        
+                        return {
+                            time: futureTime.toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            }),
+                            fullDate: futureTime.toLocaleDateString('en-US', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric'
+                            }),
+                            value: parseFloat(pred.field2)
+                        };
+                    }),
+                    pm10: fallbackPredictions.map((pred, index) => {
+                        const futureTime = new Date(lastActualTime);
+                        futureTime.setHours(futureTime.getHours() + index + 1);
+                        
+                        return {
+                            time: futureTime.toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            }),
+                            fullDate: futureTime.toLocaleDateString('en-US', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric'
+                            }),
+                            value: parseFloat(pred.field3)
+                        };
+                    }),
+                    co2: fallbackPredictions.map((pred, index) => {
+                        const futureTime = new Date(lastActualTime);
+                        futureTime.setHours(futureTime.getHours() + index + 1);
+                        
+                        return {
+                            time: futureTime.toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            }),
+                            fullDate: futureTime.toLocaleDateString('en-US', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric'
+                            }),
+                            value: parseFloat(pred.field4)
+                        };
+                    }),
+                    no2: fallbackPredictions.map((pred, index) => {
+                        const futureTime = new Date(lastActualTime);
+                        futureTime.setHours(futureTime.getHours() + index + 1);
+                        
+                        return {
+                            time: futureTime.toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            }),
+                            fullDate: futureTime.toLocaleDateString('en-US', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric'
+                            }),
+                            value: parseFloat(pred.field5)
+                        };
+                    }),
+                    o3: fallbackPredictions.map((pred, index) => {
+                        const futureTime = new Date(lastActualTime);
+                        futureTime.setHours(futureTime.getHours() + index + 1);
+                        
+                        return {
+                            time: futureTime.toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            }),
+                            fullDate: futureTime.toLocaleDateString('en-US', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric'
+                            }),
+                            value: parseFloat(pred.field6)
+                        };
+                    }),
+                    temperature: fallbackPredictions.map((pred, index) => {
+                        const futureTime = new Date(lastActualTime);
+                        futureTime.setHours(futureTime.getHours() + index + 1);
+                        
+                        return {
+                            time: futureTime.toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            }),
+                            fullDate: futureTime.toLocaleDateString('en-US', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric'
+                            }),
+                            value: parseFloat(pred.field7)
+                        };
+                    }),
+                    humidity: fallbackPredictions.map((pred, index) => {
+                        const futureTime = new Date(lastActualTime);
+                        futureTime.setHours(futureTime.getHours() + index + 1);
+                        
+                        return {
+                            time: futureTime.toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            }),
+                            fullDate: futureTime.toLocaleDateString('en-US', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric'
+                            }),
+                            value: parseFloat(pred.field8)
+                        };
+                    })
+                };
+                
+                setPredictedData(processedFallback);
+            } catch (fallbackError) {
+                console.error("Error with fallback prediction data:", fallbackError);
+            }
         }
     };
 
