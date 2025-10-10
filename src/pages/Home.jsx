@@ -64,7 +64,9 @@ function Home() {
                 // Calculate start date based on selected range
                 const startDate = getStartDate(dateRange);
                 const startDateStr = startDate.toISOString();
-                
+
+                console.log(startDateStr)
+
                 // Construct API URL with date range filter
                 const apiUrl = `https://api.thingspeak.com/channels/${channelId}/feeds.json?api_key=${apiKey}&start=${startDateStr}`;
                 
